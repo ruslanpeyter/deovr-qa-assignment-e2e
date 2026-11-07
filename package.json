@@ -1,0 +1,15 @@
+{
+  "name": "deovr-qa-e2e-autotest",
+  "version": "1.0.0",
+  "description": "Practical Playwright E2E autotest for DeoVR.com video discovery, playback, and console error monitoring",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "report": "npx playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^22.0.0"
+  }
+}
