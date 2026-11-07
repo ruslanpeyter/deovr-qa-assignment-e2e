@@ -19,9 +19,9 @@ Full written deliverables for **Task 1 (Bug Reports)** and **Task 2 (Prioritized
 
 | Step | Action | Expected Result |
 | :--- | :--- | :--- |
-| **1** | Navigate to [Nature VR Videos (`https://deovr.com/categories/nature-vr`)](https://deovr.com/categories/nature-vr). | Page returns HTTP 200 and renders the `Nature VR Videos` heading, `For You` link, and `Trending` dropdown button. |
-| **2** | Inspect the first video card (`<article>`) in the category grid. | First video card is visible along with its **Watch Later** and **Like** action buttons. |
-| **3** | Navigate to creator channel [Footstepsman JAPAN (`https://deovr.com/channel/footstepsman-japan`)](https://deovr.com/channel/footstepsman-japan) and look up the target video link. | Channel page loads with the `Footstepsman JAPAN` header and visible video cards. |
+| **1** | Navigate to [Nature VR Videos (`https://deovr.com/categories/nature-vr`)](https://deovr.com/categories/nature-vr). | The page returns HTTP 200 and renders the `Nature VR Videos` heading, `For You` link, and `Trending` dropdown button. |
+| **2** | Inspect the first video card (`<article>`) in the category grid. | The first video card is visible, along with its **Watch Later** and **Like** action buttons. |
+| **3** | Navigate to the creator channel [Footstepsman JAPAN (`https://deovr.com/channel/footstepsman-japan`)](https://deovr.com/channel/footstepsman-japan) and look up the target video link. | The channel page loads with the `Footstepsman JAPAN` header and visible video cards. |
 | **4** | Open the video's Watch Page (using deterministic fallback [Watch Page `https://deovr.com/93t47n`](https://deovr.com/93t47n) if the live feed rotated) and click the **More actions** (`⋮`) button. | Watch page displays **Subscribe** and **Related Videos**, and clicking **More actions** reveals the **Share** option in the action menu. |
 | **5** | Mute the HTML5 `<video>` element (`video.muted = true` to satisfy browser autoplay rules) and call `video.play()`. | The player mounts with a valid media source (`srcPresent === true`) and zero unexpected uncaught `pageerror` exceptions. |
 
@@ -29,7 +29,7 @@ Full written deliverables for **Task 1 (Bug Reports)** and **Task 2 (Prioritized
 
 ## AI Workflow Note
 
-- **AI Tool Used**: Claude 3.5 Sonnet for initial Playwright test generation, followed by manual inspection of Playwright's ARIA snapshot (`error-context.md`) and live DOM debugging to refactor the suite into a Page Object Model.
+- **AI Tool Used**: Claude Sonnet for initial Playwright test generation, followed by manual inspection of Playwright's ARIA snapshot (`error-context.md`) and live DOM debugging to refactor the suite into a Page Object Model.
 - **Key Prompts Used**:
   1. *Prompt 1 (Initial Test & Practical Hardcoding)*: `"Write a Playwright TypeScript E2E test for https://deovr.com/categories/nature-vr that verifies the category page loads, opens a video watch page, verifies watch page controls ('Subscribe', 'Share', 'Related Videos'), and starts playback. Prefer practical hardcoded test data with inline comments explaining how dynamic test data would work in reality."`
   2. *Prompt 2 (Fixing Role Locators & Refactoring to POM)*: `"Based on the ARIA snapshot from error-context.md, 'Trending (Month)' is a <button> rather than a <a> link, and category cards (<article>) expose 'Watch Later' and 'Like' buttons directly. Refactor the test into a clean Page Object Model (CategoryPage, ChannelPage, WatchPage) using exact ARIA role locators."`
@@ -38,7 +38,7 @@ Full written deliverables for **Task 1 (Bug Reports)** and **Task 2 (Prioritized
 - **What I Had to Fix / Rewrite Myself**:
   - **Corrected ARIA Role Mismatch on `Trending` (`CategoryPage.ts`)**: The AI initially assumed `Trending` was a link (`getByRole('link', { name: 'Trending' })`) like `For You` and `New`. Inspecting the failure log (`error-context.md`) revealed `Trending (Month)` is actually a dropdown `<button>`, so I updated `CategoryPage.ts` to use `getByRole('button', { name: /Trending/i })`.
   - **Scoped Video Card Assertions to Visible DOM Controls (`CategoryPage.ts`)**: On the category grid, `Play in VR` is hidden inside the card's `"More actions"` menu, whereas `Watch Later` and `Like` are directly visible on each `<article>` card. I updated `verifyFirstVideoCardControls()` to assert the visible card buttons.
-  - **Opened `More actions` Before Asserting `Share` (`WatchPage.ts`)**: The AI assumed `Share` was directly visible on the Watch Page bar, but in the current UI `Share` is tucked inside the `More actions` (`⋮`) popover menu. I added `this.moreActionsButton = page.getByRole('button', { name: /more actions/i })` and clicked it before asserting `expect(this.shareControl).toBeVisible()`.
+  - **Opened `More actions` Before Asserting `Share` (`WatchPage.ts`)**: The AI assumed `Share` was directly visible on the Watch Page bar, but in the current UI, `Share` is tucked inside the `More actions` (`⋮`) popover menu. I added `this.moreActionsButton = page.getByRole('button', { name: /more actions/i })` and clicked it before asserting `expect(this.shareControl).toBeVisible()`.
   - **Added Deterministic Fallback Routing**: Because production trending feeds change constantly, I hardcoded a fallback watch route (`/93t47n`) and documented in code comments how a staging CI pipeline would seed or fetch an active video ID via API in `beforeAll`.
 
 ---
